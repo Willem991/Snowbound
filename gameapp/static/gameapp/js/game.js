@@ -1,21 +1,12 @@
 (() => {
+  // ---------- WebSocket / Channels ----------
+  const id = Math.random(); // unique ID for this penguin
 
-  // ---------- channels ------------
-
-    const chatSocket = new WebSocket(
-        'ws://'
-        + window.location.host
-        + '/main/game/'
-    );
-
-    chatSocket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-
-        const rect = canvas.getBoundingClientRect();
-        dest.x = data.x - rect.left;
-        dest.y = data.y - rect.top;
-    };     
-
+  const chatSocket = new WebSocket(
+    'ws://'
+    + window.location.host
+    + '/main/game/'
+  );
 
   // --------- game variables -------
   const canvas = document.getElementById("game");
@@ -24,34 +15,33 @@
 
   function spritePath(file) {
     return window.STATIC_URL + "gameapp/img/" + file;
-}
+  }
 
-  // --------- CONFIG ----------
   const SPRITE_FILENAME = spritePath("RunSheet.png");
-
   console.log(window.STATIC_URL);
 
-  const DIRECTIONS = 8;     // number of rows
-  const FRAMES_PER_ROW = 8; // number of frames in each row
-
+  const DIRECTIONS = 8;     // number of rows in sprite sheet
+  const FRAMES_PER_ROW = 8; // frames per row
   const DEFAULT_SPEED = 2;
 
-  // Character state
-  let char = { 
-    x: 100, 
-    y: 100, 
-    frame: 0, 
-    direction: 4, // start facing South
-    moving: false 
+  let FRAME_W = 32, FRAME_H = 32;
+  let frameTimer = 0;
+  let started = false;
+
+  // Track all penguins
+  let penguins = {};
+
+  // Initialize this user's penguin
+  penguins[id] = {
+    x: 100,
+    y: 100,
+    frame: 0,
+    direction: 4, // facing South
+    moving: false,
+    dest: { x: 100, y: 100 }
   };
 
-  let dest = { x: char.x, y: char.y };
-  let speed = DEFAULT_SPEED;
-
-  let frameTimer = 0;
-  let FRAME_W = 32, FRAME_H = 32;
-
-  // Load sprite
+  // Load sprite sheet
   const sprite = new Image();
   sprite.src = SPRITE_FILENAME;
 
@@ -67,16 +57,6 @@
     if (!started) startLoop();
   };
 
-  // Click to set destination
-  canvas.addEventListener("click", (e) => {
-
-    chatSocket.send(JSON.stringify({
-        'x':e.clientX,
-        'y':e.clientY
-    }));
-    messageInputDom.value = '';
-  });
-
   // ---------------------------
   // MATCHES YOUR SPRITE SHEET EXACTLY
   // Row order: N, NE, E, SE, S, SW, W, NW
@@ -86,52 +66,127 @@
     let d = angle * 180 / Math.PI;
     if (d < 0) d += 360;
 
-    // 0: N
-    // 1: NE
-    // 2: E
-    // 3: SE
-    // 4: S
-    // 5: SW
-    // 6: W
-    // 7: NW
+    if (d >= 337.5 || d < 22.5) return 2;  // East
+    if (d >= 22.5 && d < 67.5) return 3;   // SE
+    if (d >= 67.5 && d < 112.5) return 4;  // South
+    if (d >= 112.5 && d < 157.5) return 5; // SW
+    if (d >= 157.5 && d < 202.5) return 6; // West
+    if (d >= 202.5 && d < 247.5) return 7; // NW
+    if (d >= 247.5 && d < 292.5) return 0; // North
+    if (d >= 292.5 && d < 337.5) return 1; // NE
 
-    if (d >= 337.5 || d < 22.5) return 2;        // East
-    if (d >= 22.5 && d < 67.5) return 3;         // SE
-    if (d >= 67.5 && d < 112.5) return 4;        // South
-    if (d >= 112.5 && d < 157.5) return 5;       // SW
-    if (d >= 157.5 && d < 202.5) return 6;       // West
-    if (d >= 202.5 && d < 247.5) return 7;       // NW
-    if (d >= 247.5 && d < 292.5) return 0;       // North
-    if (d >= 292.5 && d < 337.5) return 1;       // NE
-
-    return 4;
+    return 4; // fallback South
   }
 
-  function update() {
-    const dx = dest.x - char.x;
-    const dy = dest.y - char.y;
-    const dist = Math.hypot(dx, dy);
+  // ---------------------------
+  // WebSocket events
+  // ---------------------------
+  chatSocket.onopen = function() {
+    // Immediately announce this penguin to others
+    chatSocket.send(JSON.stringify({
+      id: id,
+      x: penguins[id].x,
+      y: penguins[id].y
+    }));
+  };
 
-    if (dist > speed) {
-      char.moving = true;
-      char.direction = getDirection(dx, dy);
-      char.x += (dx / dist) * speed;
-      char.y += (dy / dist) * speed;
-    } else {
-      char.moving = false;
-      char.x = dest.x;
-      char.y = dest.y;
+chatSocket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+
+    if (data.type === "all_penguins") {
+        for (let pengId in data.penguins) {
+            const p = data.penguins[pengId];
+            penguins[pengId] = {
+                x: p.x,
+                y: p.y,
+                frame: 0,
+                direction: 4,
+                moving: false,
+                dest: { x: p.x, y: p.y }
+            };
+        }
+        return;
     }
 
-    // Animate
-    if (char.moving) {
-      frameTimer++;
-      if (frameTimer > 6) {
-        char.frame = (char.frame + 1) % FRAMES_PER_ROW;
-        frameTimer = 0;
-      }
+    if (data.type === "remove") {
+        // Remove penguin
+        delete penguins[data.id];
+        return;
+    }
+
+    // Normal penguin position update
+    const pengId = data.id;
+    if (!penguins[pengId]) {
+        penguins[pengId] = {
+            x: data.x,
+            y: data.y,
+            frame: 0,
+            direction: 4,
+            moving: false,
+            dest: { x: data.x, y: data.y }
+        };
     } else {
-      char.frame = 0;
+        penguins[pengId].dest.x = data.x;
+        penguins[pengId].dest.y = data.y;
+    }
+};
+
+
+  window.addEventListener("beforeunload", () => {
+      if (chatSocket.readyState === WebSocket.OPEN) {
+          chatSocket.send(JSON.stringify({
+              type: "remove",
+              id: id
+          }));
+      }
+  });
+
+
+  // Click to move your penguin
+  canvas.addEventListener("click", (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const p = penguins[id];
+    p.dest.x = e.clientX - rect.left;
+    p.dest.y = e.clientY - rect.top;
+
+    chatSocket.send(JSON.stringify({
+      id: id,
+      x: p.dest.x,
+      y: p.dest.y
+    }));
+  });
+
+  // ---------------------------
+  // Game loop functions
+  // ---------------------------
+  function update() {
+    for (let pid in penguins) {
+      const p = penguins[pid];
+      const dx = p.dest.x - p.x;
+      const dy = p.dest.y - p.y;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist > DEFAULT_SPEED) {
+        p.moving = true;
+        p.direction = getDirection(dx, dy);
+        p.x += (dx / dist) * DEFAULT_SPEED;
+        p.y += (dy / dist) * DEFAULT_SPEED;
+      } else {
+        p.moving = false;
+        p.x = p.dest.x;
+        p.y = p.dest.y;
+      }
+
+      // Animate
+      if (p.moving) {
+        frameTimer++;
+        if (frameTimer > 6) {
+          p.frame = (p.frame + 1) % FRAMES_PER_ROW;
+          frameTimer = 0;
+        }
+      } else {
+        p.frame = 0;
+      }
     }
   }
 
@@ -144,32 +199,26 @@
       ctx.fillStyle = "#fff";
       ctx.fillText("Sprite not loaded.", 20, 32);
       ctx.fillText(`Expected: ${SPRITE_FILENAME}`, 20, 52);
-      ctx.beginPath();
-      ctx.fillStyle = "#222";
-      ctx.arc(char.x, char.y, 16, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#fff";
-      ctx.stroke();
       return;
     }
 
-    const sx = char.frame * FRAME_W;
-    const sy = char.direction * FRAME_H;
+    for (let pid in penguins) {
+      const p = penguins[pid];
+      const sx = p.frame * FRAME_W;
+      const sy = p.direction * FRAME_H;
+      const dx = Math.round(p.x - FRAME_W / 2);
+      const dy = Math.round(p.y - FRAME_H / 2);
 
-    const dx = Math.round(char.x - FRAME_W / 2);
-    const dy = Math.round(char.y - FRAME_H / 2);
+      ctx.drawImage(sprite, sx, sy, FRAME_W, FRAME_H, dx, dy, FRAME_W, FRAME_H);
 
-    ctx.drawImage(sprite, sx, sy, FRAME_W, FRAME_H, dx, dy, FRAME_W, FRAME_H);
-
-    // Draw target marker
-    ctx.fillStyle = "rgba(0,0,0,0.4)";
-    ctx.beginPath();
-    ctx.arc(dest.x, dest.y, 4, 0, Math.PI * 2);
-    ctx.fill();
+      // Draw destination marker
+      ctx.fillStyle = "rgba(0,0,0,0.4)";
+      ctx.beginPath();
+      ctx.arc(p.dest.x, p.dest.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
-  // Game loop
-  let started = false;
   function startLoop() {
     if (started) return;
     started = true;
