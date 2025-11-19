@@ -1,4 +1,23 @@
 (() => {
+
+  // ---------- channels ------------
+
+    const chatSocket = new WebSocket(
+        'ws://'
+        + window.location.host
+        + '/main/game/'
+    );
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+
+        const rect = canvas.getBoundingClientRect();
+        dest.x = data.x - rect.left;
+        dest.y = data.y - rect.top;
+    };     
+
+
+  // --------- game variables -------
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
   const info = document.getElementById("info");
@@ -50,9 +69,12 @@
 
   // Click to set destination
   canvas.addEventListener("click", (e) => {
-    const rect = canvas.getBoundingClientRect();
-    dest.x = e.clientX - rect.left;
-    dest.y = e.clientY - rect.top;
+
+    chatSocket.send(JSON.stringify({
+        'x':e.clientX,
+        'y':e.clientY
+    }));
+    messageInputDom.value = '';
   });
 
   // ---------------------------
