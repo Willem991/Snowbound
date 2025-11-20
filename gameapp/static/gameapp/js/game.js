@@ -190,34 +190,30 @@ chatSocket.onmessage = function(e) {
     }
   }
 
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (!sprite.complete || sprite.naturalWidth === 0) {
-      ctx.fillStyle = "#111";
-      ctx.fillRect(10, 10, 220, 60);
-      ctx.fillStyle = "#fff";
-      ctx.fillText("Sprite not loaded.", 20, 32);
-      ctx.fillText(`Expected: ${SPRITE_FILENAME}`, 20, 52);
-      return;
-    }
+  if (!sprite.complete || sprite.naturalWidth === 0) return;
 
-    for (let pid in penguins) {
-      const p = penguins[pid];
-      const sx = p.frame * FRAME_W;
-      const sy = p.direction * FRAME_H;
-      const dx = Math.round(p.x - FRAME_W / 2);
-      const dy = Math.round(p.y - FRAME_H / 2);
+  // Convert penguins {} → array
+  const sorted = Object.values(penguins)
+    .sort((a, b) => a.y - b.y);  // lower penguin drawn last (in front)
 
-      ctx.drawImage(sprite, sx, sy, FRAME_W, FRAME_H, dx, dy, FRAME_W, FRAME_H);
+  // Draw in sorted order
+  for (let p of sorted) {
+    const sx = p.frame * FRAME_W;
+    const sy = p.direction * FRAME_H;
+    const dx = Math.round(p.x - FRAME_W / 2);
+    const dy = Math.round(p.y - FRAME_H / 2);
 
-      // Draw destination marker
-      ctx.fillStyle = "rgba(0,0,0,0.4)";
-      ctx.beginPath();
-      ctx.arc(p.dest.x, p.dest.y, 4, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    ctx.drawImage(sprite, sx, sy, FRAME_W, FRAME_H, dx, dy, FRAME_W, FRAME_H);
+
+    ctx.fillStyle = "rgba(0,0,0,0.4)";
+    ctx.beginPath();
+    ctx.arc(p.dest.x, p.dest.y, 4, 0, Math.PI * 2);
+    ctx.fill();
   }
+}
 
   function startLoop() {
     if (started) return;
