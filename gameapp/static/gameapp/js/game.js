@@ -4,6 +4,67 @@
     return window.STATIC_URL + "gameapp/img/" + file;
   }
 
+  // ------------- Create a New Web Socket --------------
+
+  // This is for when a penguin enters or changes rooms and allows syncing between other penguins in the same room
+
+  function createNewWebSocket(group){
+    let chatSocket = new WebSocket(
+      'ws://' + window.location.host + '/ws/main/game/' + group + '/'
+    );
+
+    chatSocket.onopen = function() {
+    // Immediately announce this penguin to others
+      chatSocket.send(JSON.stringify({
+        id: id,
+        x: penguins[id].x,
+        y: penguins[id].y
+        }));
+    };
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+
+        if (data.type === "all_penguins") {
+            for (let pengId in data.penguins) {
+                const p = data.penguins[pengId];
+                penguins[pengId] = {
+                    x: p.x,
+                    y: p.y,
+                    frame: 0,
+                    direction: 4,
+                    moving: false,
+                    dest: { x: p.x, y: p.y }
+                };
+            }
+            return;
+        }
+
+        if (data.type === "remove") {
+            // Remove penguin
+            delete penguins[data.id];
+            return;
+        }
+
+        // Normal penguin position update
+        const pengId = data.id;
+        if (!penguins[pengId]) {
+            penguins[pengId] = {
+                x: data.x,
+                y: data.y,
+                frame: 0,
+                direction: 4,
+                moving: false,
+                dest: { x: data.x, y: data.y }
+            };
+        } else {
+            penguins[pengId].dest.x = data.x;
+            penguins[pengId].dest.y = data.y;
+        }
+    }
+
+    return chatSocket
+  }
   //-------------- load maps --------------
 
   const TOWN_FILENAME = imgPath('sample_town_full.webp')
@@ -22,9 +83,13 @@
   const map = document.getElementById("map")
   let mapGroup = "town"
 
+  // Allows the map to be visible when its icon is clicked 
+
   map_icon.addEventListener("click", (e) => { 
       map.classList.remove("hide")
   })
+
+  // Switches the penguin to the town map if clicked
 
   town_icon.addEventListener("click", (e) => {
     map.classList.add("hide")
@@ -42,60 +107,11 @@
         [id]: penguins[id]  // Keep only your own penguin
     };
 
-    chatSocket = new WebSocket(
-      'ws://' + window.location.host + '/ws/main/game/' + mapGroup + '/'
-    );
-
-      chatSocket.onopen = function() {
-    // Immediately announce this penguin to others
-    chatSocket.send(JSON.stringify({
-      id: id,
-      x: penguins[id].x,
-      y: penguins[id].y
-    }));
-  };
-
-chatSocket.onmessage = function(e) {
-    const data = JSON.parse(e.data);
-
-    if (data.type === "all_penguins") {
-        for (let pengId in data.penguins) {
-            const p = data.penguins[pengId];
-            penguins[pengId] = {
-                x: p.x,
-                y: p.y,
-                frame: 0,
-                direction: 4,
-                moving: false,
-                dest: { x: p.x, y: p.y }
-            };
-        }
-        return;
-    }
-
-    if (data.type === "remove") {
-        // Remove penguin
-        delete penguins[data.id];
-        return;
-    }
-
-    // Normal penguin position update
-    const pengId = data.id;
-    if (!penguins[pengId]) {
-        penguins[pengId] = {
-            x: data.x,
-            y: data.y,
-            frame: 0,
-            direction: 4,
-            moving: false,
-            dest: { x: data.x, y: data.y }
-        };
-    } else {
-        penguins[pengId].dest.x = data.x;
-        penguins[pengId].dest.y = data.y;
-    }
-}
+    chatSocket = createNewWebSocket(mapGroup)
+    
   })
+
+  // Switches the penguin to the lighthouse map if clicked
 
   lighthouse_icon.addEventListener("click", (e) => {
     map.classList.add("hide")
@@ -113,74 +129,16 @@ chatSocket.onmessage = function(e) {
       [id]: penguins[id]  // Keep only your own penguin
     };
 
-    chatSocket = new WebSocket(
-      'ws://' + window.location.host + '/ws/main/game/' + mapGroup + '/'
-    );
-
-      chatSocket.onopen = function() {
-    // Immediately announce this penguin to others
-    chatSocket.send(JSON.stringify({
-      id: id,
-      x: penguins[id].x,
-      y: penguins[id].y
-    }));
-  };
-
-chatSocket.onmessage = function(e) {
-    const data = JSON.parse(e.data);
-
-    if (data.type === "all_penguins") {
-        for (let pengId in data.penguins) {
-            const p = data.penguins[pengId];
-            penguins[pengId] = {
-                x: p.x,
-                y: p.y,
-                frame: 0,
-                direction: 4,
-                moving: false,
-                dest: { x: p.x, y: p.y }
-            };
-        }
-        return;
-    }
-
-    if (data.type === "remove") {
-        // Remove penguin
-        delete penguins[data.id];
-        return;
-    }
-
-    // Normal penguin position update
-    const pengId = data.id;
-    if (!penguins[pengId]) {
-        penguins[pengId] = {
-            x: data.x,
-            y: data.y,
-            frame: 0,
-            direction: 4,
-            moving: false,
-            dest: { x: data.x, y: data.y }
-        };
-    } else {
-        penguins[pengId].dest.x = data.x;
-        penguins[pengId].dest.y = data.y;
-    }
-}
+    chatSocket = createNewWebSocket(mapGroup)
   })
 
 
   // ---------- WebSocket / Channels ----------
+
   const id = Math.random(); // unique ID for this penguin
   
-  let chatSocket = new WebSocket(
-    'ws://'
-    + window.location.host
-    + '/ws/main/game/'
-    + mapGroup + '/'
-  );
-
+  let chatSocket = createNewWebSocket(mapGroup) // create a server connection when first loading the game
   
-
   // --------- game variables -------
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
@@ -249,56 +207,6 @@ chatSocket.onmessage = function(e) {
   // ---------------------------
   // WebSocket events
   // ---------------------------
-
-  chatSocket.onopen = function() {
-    // Immediately announce this penguin to others
-    chatSocket.send(JSON.stringify({
-      id: id,
-      x: penguins[id].x,
-      y: penguins[id].y
-    }));
-  };
-
-chatSocket.onmessage = function(e) {
-    const data = JSON.parse(e.data);
-
-    if (data.type === "all_penguins") {
-        for (let pengId in data.penguins) {
-            const p = data.penguins[pengId];
-            penguins[pengId] = {
-                x: p.x,
-                y: p.y,
-                frame: 0,
-                direction: 4,
-                moving: false,
-                dest: { x: p.x, y: p.y }
-            };
-        }
-        return;
-    }
-
-    if (data.type === "remove") {
-        // Remove penguin
-        delete penguins[data.id];
-        return;
-    }
-
-    // Normal penguin position update
-    const pengId = data.id;
-    if (!penguins[pengId]) {
-        penguins[pengId] = {
-            x: data.x,
-            y: data.y,
-            frame: 0,
-            direction: 4,
-            moving: false,
-            dest: { x: data.x, y: data.y }
-        };
-    } else {
-        penguins[pengId].dest.x = data.x;
-        penguins[pengId].dest.y = data.y;
-    }
-};
 
 
   window.addEventListener("beforeunload", () => {
