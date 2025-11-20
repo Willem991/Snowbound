@@ -37,6 +37,11 @@
         }));
       chatSocket.close();
     } 
+
+    penguins = {
+        [id]: penguins[id]  // Keep only your own penguin
+    };
+
     chatSocket = new WebSocket(
       'ws://' + window.location.host + '/ws/main/game/' + mapGroup + '/'
     );
@@ -103,6 +108,11 @@ chatSocket.onmessage = function(e) {
         }));
       chatSocket.close();
     } 
+
+    penguins = {
+      [id]: penguins[id]  // Keep only your own penguin
+    };
+
     chatSocket = new WebSocket(
       'ws://' + window.location.host + '/ws/main/game/' + mapGroup + '/'
     );
