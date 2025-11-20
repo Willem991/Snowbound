@@ -1,0 +1,83 @@
+    body { 
+      background: #222; 
+      color: #ddd; 
+      font-family: sans-serif; 
+      text-align:center; 
+      margin: 20px; 
+    }
+
+    canvas {
+      background: #aee3ff;
+      display: block;
+      margin: 10px auto;
+      border: 1px solid #333;
+      z-index: 0;
+    }
+
+    #game_container{
+        align-self: center;
+        justify-self: center;
+        width: 1100px;
+        height:700px;
+        position:relative
+    }
+
+    #map{
+        justify-self: center;
+        position: absolute;
+        height: 90%;
+        width: 100%;
+        top: 30px;
+        left: 80px;
+        z-index: 10;
+    }
+
+    #map_bg{
+        position: absolute;
+        top:0px;
+        left: 0px;
+        height: 100%;
+        z-index: 10;
+    }
+
+    #map_town{
+        position: absolute;
+        top:150px;
+        left: 350px;
+        z-index: 11;
+        height: 30%;
+    }
+
+    #map_town:hover{
+        height: 31%;
+    }
+
+    #map_lh{
+        position: absolute;
+        top:200px;
+        left: 100px;
+        z-index: 11;
+        height: 30%;
+    }
+
+    #map_lh:hover{
+        height: 31%;
+    }
+
+    #map_icon{
+        height: 100px;
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        z-index: 5;
+    }
+
+    #map_icon:hover{
+        height: 110px;
+    }
+
+    #info { font-size: 14px; margin-top:8px; }
+
+    .hide{
+        display: none;
+    }

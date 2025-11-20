@@ -4,28 +4,21 @@
 <head>
   <meta charset="utf-8" />
   <title>Sprite Test</title>
-
-  <style>
-    body { 
-      background: #222; 
-      color: #ddd; 
-      font-family: sans-serif; 
-      text-align:center; 
-      margin: 20px; 
-    }
-    canvas {
-      background: #aee3ff;
-      display: block;
-      margin: 10px auto;
-      border: 1px solid #333;
-    }
-    #info { font-size: 14px; margin-top:8px; }
-  </style>
-
+  <link rel="stylesheet" type="text/css" href= "{% static "gameapp/css/styles.css" %}"">
 </head>
 <body>
     <h2>Sprite test — click canvas to move</h2>
-    <canvas id="game" width="800" height="500"></canvas>
+    <div id="game_container">
+        <canvas id="game" width="1100" height="700"></canvas>
+        <div>
+            <img id="map_icon" src="{% static "gameapp/img/sample_map.png" %}" alt="">
+        </div>
+        <div id="map" class="hide" >
+            <img id="map_bg" src="{% static "gameapp/img/sample_map_full.png" %}" alt="">
+            <img id="map_town" src="{% static "gameapp/img/sample_town.png" %}" alt="">
+            <img id="map_lh" src="{% static "gameapp/img/sample_lighthouse.png" %}" alt="">
+        </div>
+    </div>
     <div id="info">Loading sprite...</div>
     <script>
         window.STATIC_URL = "{% static '' %}";

@@ -1,7 +1,46 @@
 (() => {
+
+  function imgPath(file) {
+    return window.STATIC_URL + "gameapp/img/" + file;
+  }
+
+  //-------------- load maps --------------
+
+  const TOWN_FILENAME = imgPath('sample_town_full.webp')
+  const town_bg = new Image();
+  town_bg.src = TOWN_FILENAME;
+
+  const LIGHTHOUSE_FILENAME = imgPath('sample_lighthouse_full.webp')
+  const lighthouse_bg = new Image();
+  lighthouse_bg.src = LIGHTHOUSE_FILENAME;
+
+  //----------- map functionality -------------
+
+  const map_icon = document.getElementById("map_icon");
+  const town_icon = document.getElementById("map_town")
+  const lighthouse_icon = document.getElementById("map_lh")
+  const map = document.getElementById("map")
+  let mapGroup = "town"
+
+  map_icon.addEventListener("click", (e) => { 
+      map.classList.remove("hide")
+  })
+
+  town_icon.addEventListener("click", (e) => {
+    map.classList.add("hide")
+    mapGroup = "town"
+  })
+
+  lighthouse_icon.addEventListener("click", (e) => {
+    map.classList.add("hide")
+    mapGroup = "lighthouse"
+    console.log(mapGroup)
+  })
+
+
   // ---------- WebSocket / Channels ----------
   const id = Math.random(); // unique ID for this penguin
-
+  
   const chatSocket = new WebSocket(
     'ws://'
     + window.location.host
@@ -13,12 +52,7 @@
   const ctx = canvas.getContext("2d");
   const info = document.getElementById("info");
 
-  function spritePath(file) {
-    return window.STATIC_URL + "gameapp/img/" + file;
-  }
-
-  const SPRITE_FILENAME = spritePath("RunSheet.png");
-  console.log(window.STATIC_URL);
+  const SPRITE_FILENAME = imgPath("RunSheet.png");
 
   const DIRECTIONS = 8;     // number of rows in sprite sheet
   const FRAMES_PER_ROW = 8; // frames per row
@@ -199,6 +233,17 @@ function draw() {
   const sorted = Object.values(penguins)
     .sort((a, b) => a.y - b.y);  // lower penguin drawn last (in front)
 
+  switch (mapGroup) {
+    case "town":
+      ctx.drawImage(town_bg,0,0)
+      break;
+    case "lighthouse":
+      ctx.drawImage(lighthouse_bg,0,0)
+      break;
+    default:
+      break;
+  }
+
   // Draw in sorted order
   for (let p of sorted) {
     const sx = p.frame * FRAME_W;
@@ -207,11 +252,6 @@ function draw() {
     const dy = Math.round(p.y - FRAME_H / 2);
 
     ctx.drawImage(sprite, sx, sy, FRAME_W, FRAME_H, dx, dy, FRAME_W, FRAME_H);
-
-    ctx.fillStyle = "rgba(0,0,0,0.4)";
-    ctx.beginPath();
-    ctx.arc(p.dest.x, p.dest.y, 4, 0, Math.PI * 2);
-    ctx.fill();
   }
 }
 
