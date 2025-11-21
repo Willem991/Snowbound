@@ -67,13 +67,25 @@
     #map_icon{
         height: 100px;
         position: absolute;
-        bottom: 20px;
+        bottom: 0px;
         left: 20px;
         z-index: 5;
     }
 
     #map_icon:hover{
         height: 110px;
+    }
+
+    #item_bar{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        left: 15%;
+        width: 70%;
+        height: 60px;
+        bottom: 0px;
+        background-color: aqua;
     }
 
     #info { font-size: 14px; margin-top:8px; }

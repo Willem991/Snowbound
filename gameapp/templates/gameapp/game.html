@@ -10,13 +10,16 @@
     <h2>Sprite test — click canvas to move</h2>
     <div id="game_container">
         <canvas id="game" width="1100" height="700"></canvas>
-        <div>
-            <img id="map_icon" src="{% static "gameapp/img/sample_map.png" %}" alt="">
-        </div>
         <div id="map" class="hide" >
             <img id="map_bg" src="{% static "gameapp/img/sample_map_full.png" %}" alt="">
             <img id="map_town" src="{% static "gameapp/img/sample_town.png" %}" alt="">
             <img id="map_lh" src="{% static "gameapp/img/sample_lighthouse.png" %}" alt="">
+        </div>
+        <div id="bottom_bar">
+            <img id="map_icon" src="{% static "gameapp/img/sample_map.png" %}" alt="">
+            <div id="item_bar">
+                <input id="message_bar" type="text">
+            </div>
         </div>
     </div>
     <div id="info">Loading sprite...</div>

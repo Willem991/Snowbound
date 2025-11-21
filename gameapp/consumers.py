@@ -48,18 +48,22 @@ class ChatConsumer(WebsocketConsumer):
         # Normal position update
         x = data["x"]
         y = data["y"]
-        penguins_in_room[self.room_name][peng_id] = {"x": x, "y": y}
+        chat_message = data["chat"]
+        chat_timer = data["chat_timer"]
+        penguins_in_room[self.room_name][peng_id] = {"x": x, "y": y, "chat":chat_message, "chat_timer":chat_timer}
 
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name,
-            {"type": "chat.message", "id": peng_id, "x": x, "y": y}
+            {"type": "chat.message", "id": peng_id, "x": x, "y": y, "chat":chat_message, "chat_timer": chat_timer}
         )
 
     def chat_message(self, event):
         self.send(text_data=json.dumps({
             "id": event["id"],
             "x": event["x"],
-            "y": event["y"]
+            "y": event["y"],
+            "chat":event["chat"],
+            "chat_timer":event["chat_timer"]
         }))
 
     def chat_remove(self, event):

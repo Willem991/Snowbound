@@ -1,18 +1,20 @@
 
-window.addEventListener("DOMContentLoaded", () => {
+(() => {
 
-  console.log("Running")
+  console.log("sprinting")
 
   function imgPath(file) {
     return window.STATIC_URL + "gameapp/img/" + file;
   }
 
   // --------- game variables -------
+  const message_bar = document.getElementById("message_bar")
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
   const info = document.getElementById("info");
 
   const SPRITE_FILENAME = imgPath("RunSheet.png");
+  const CHATBUBBLE_FILENAME = imgPath("sample_chat_full.webp")
 
   const DIRECTIONS = 8;     // number of rows in sprite sheet
   const FRAMES_PER_ROW = 8; // frames per row
@@ -39,8 +41,6 @@ window.addEventListener("DOMContentLoaded", () => {
   const lighthouse_icon = document.getElementById("map_lh");
   const map = document.getElementById("map");
 
-  console.log(town_icon)
-
   let mapGroup = "town"; // initial map
 
   // ------------- Load maps --------------
@@ -51,6 +51,31 @@ window.addEventListener("DOMContentLoaded", () => {
   const LIGHTHOUSE_FILENAME = imgPath('sample_lighthouse_full.webp');
   const lighthouse_bg = new Image();
   lighthouse_bg.src = LIGHTHOUSE_FILENAME;
+
+  // ------------- Load and Configure Chat  --------------------
+
+  chat_bubble = new Image();
+  chat_bubble.src = CHATBUBBLE_FILENAME
+
+  message_bar.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+        penguins[id].chat = message_bar.value;
+        penguins[id].chat_timer = 300;
+
+        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({
+                id: id,
+                x: penguins[id].x,
+                y: penguins[id].y,
+                chat: penguins[id].chat,
+                chat_timer: penguins[id].chat_timer
+            }));
+        }
+
+        message_bar.value = "";  // clear input
+    }
+});
+
 
   // ------------- Load sprite sheet -------------
   const sprite = new Image();
@@ -109,7 +134,9 @@ window.addEventListener("DOMContentLoaded", () => {
         dest: { 
           x: SPAWNS[mapGroup].x,
           y: SPAWNS[mapGroup].y
-        }
+        },
+        chat:"",
+        chat_timer:"0"
       }
     };
 
@@ -122,7 +149,9 @@ window.addEventListener("DOMContentLoaded", () => {
       chatSocket.send(JSON.stringify({
         id: id,
         x: penguins[id].x,
-        y: penguins[id].y
+        y: penguins[id].y,
+        chat: penguins[id].chat,
+        chat_timer: penguins[id].chat_timer || 0
       }));
     };
 
@@ -139,7 +168,9 @@ window.addEventListener("DOMContentLoaded", () => {
             frame: 0,
             direction: 4,
             moving: false,
-            dest: { x: p.x, y: p.y }
+            dest: { x: p.x, y: p.y },
+            chat:p.chat,
+            chat_timer:p.chat_timer
           };
         }
         return;
@@ -158,11 +189,15 @@ window.addEventListener("DOMContentLoaded", () => {
           frame: 0,
           direction: 4,
           moving: false,
-          dest: { x: data.x, y: data.y }
+          dest: { x: data.x, y: data.y },
+          chat:data.chat,
+          chat_timer:data.chat_timer
         };
       } else {
         penguins[pengId].dest.x = data.x;
         penguins[pengId].dest.y = data.y;
+        penguins[pengId].chat = data.chat;
+        penguins[pengId].chat_timer = data.chat_timer;
       }
     };
   }
@@ -172,10 +207,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   town_icon.addEventListener("click", () => {
     map.classList.add("hide");
-    console.log("Hello")
-    console.log(penguins[id]);
     switchRoom("town");
-    console.log(penguins[id])
   });
 
   lighthouse_icon.addEventListener("click", () => {
@@ -201,7 +233,14 @@ window.addEventListener("DOMContentLoaded", () => {
     p.dest.y = e.clientY - rect.top;
 
     if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
-      chatSocket.send(JSON.stringify({ id: id, x: p.dest.x, y: p.dest.y }));
+      chatSocket.send(JSON.stringify({
+        id: id,
+        x: p.dest.x,
+        y: p.dest.y,
+        chat: penguins[id].chat || "",
+        chat_timer: penguins[id].chat_timer || 0
+      }));
+
     }
   });
 
@@ -254,6 +293,16 @@ window.addEventListener("DOMContentLoaded", () => {
       const dx = Math.round(p.x - FRAME_W / 2);
       const dy = Math.round(p.y - FRAME_H / 2);
       ctx.drawImage(sprite, sx, sy, FRAME_W, FRAME_H, dx, dy, FRAME_W, FRAME_H);
+
+      if(p.chat_timer > 0){
+        ctx.drawImage(chat_bubble,0, 0, 500, 356, dx + 10, dy - 80, 125, 87.5);
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "black";
+        ctx.fillText(p.chat,dx + 30, dy - 50)
+        p.chat_timer -= 1;
+      }else{
+        p.chat = ""
+      }
     }
   }
 
