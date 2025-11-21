@@ -25,6 +25,7 @@
     <div id="info">Loading sprite...</div>
     <script>
         window.STATIC_URL = "{% static '' %}";
+        const imageFiles = {{ image_files|safe }};
     </script>
     <script src="{% static 'gameapp/js/game.js' %}"></script>
 </body>

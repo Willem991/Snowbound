@@ -1,7 +1,7 @@
 
 (() => {
 
-  console.log("sprinting")
+  console.log(imageFiles)
 
   function imgPath(file) {
     return window.STATIC_URL + "gameapp/img/" + file;
