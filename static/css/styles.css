@@ -1,5 +1,25 @@
+.oi-regular {
+  font-family: "Oi", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.outlined-text {
+  color: black; /* text fill color */
+  text-shadow: 
+    0 0 10px #53ccf9,
+    -1px -1px 0px black,
+     1px -1px 0px black,
+    -1px  1px 0px black,
+     1px  1px 0px black;
+}
+
 body{
     margin: 0px;
+}
+
+a{
+  text-decoration: none;
 }
 
 #header{
@@ -23,10 +43,14 @@ body{
 
 #logo{
     position: absolute;
-    left: 10px;
-    top:10px;
+    left: 30px;
+    top:20px;
     width: auto;
     height: 60%;
+}
+
+#playbtn{
+    
 }
 
 #navlinks_body{
@@ -37,10 +61,19 @@ body{
     padding: 0;
     margin: 0;
     justify-content: center;
-    top: 20px;
+    top: 30px;
 }
 
 .navlink{
     color: white;
-    text-shadow: 1em;
+    text-shadow: 1;
 }
+
+.navlink:hover{
+    text-shadow: 
+        0 0 15px #53ccf9,
+        -1px -1px 0px black,
+        1px -1px 0px black,
+        -1px  1px 0px black,
+        1px  1px 0px black;
+    }
