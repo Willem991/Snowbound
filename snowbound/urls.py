@@ -21,6 +21,8 @@ from . import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.HomeView.as_view(), name="home"),
+    path('about/', views.AboutView.as_view(), name="about"),
+    path('support/', views.SupportView.as_view(), name='support'),
     path('main/', include('gameapp.urls')),
     path('auth/', include('authapp.urls'))
 ]
