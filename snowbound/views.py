@@ -9,3 +9,6 @@ class AboutView(TemplateView):
 
 class SupportView(TemplateView):
     template_name = "support.html"
+
+class NewsView(TemplateView):
+    template_name = "whatsnew.html"
