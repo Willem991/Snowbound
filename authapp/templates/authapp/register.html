@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+    <form method="POST">
+        {% csrf_token %}
+
+        <h3>User Info</h3>
+        {{ user_form.as_p }}
+
+        <h3>Penguin Info</h3>
+        {{ penguin_form.as_p }}
+        
+    <button type="submit">Register</button>
+</form>
+{% endblock  %}
