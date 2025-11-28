@@ -6,4 +6,4 @@ from .models import Penguin
 class PenguinForm(forms.ModelForm):
     class Meta:
         model = Penguin
-        fields = ['name', 'color', 'age']
+        fields = ['name', 'color']
